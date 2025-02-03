@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from "@clerk/nextjs/server";
 import {
   AlertCircle,
   CheckCircle2,
@@ -9,12 +10,13 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const user = await auth();
   return (
     <div className="space-y-8">
       <div className="flex flex-col space-y-4">
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, Alex
+          Welcome back, {user?.userId}
         </h1>
         <p className="text-muted-foreground">
           Here&apos;s an overview of your rental status and recent activities.
