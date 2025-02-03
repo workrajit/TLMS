@@ -1,4 +1,5 @@
 import { DashNavbar } from "./_components/dashNavbar";
+import { Notifications } from "./_components/Notifications";
 
 export default function DashboardLayout({
   children,
@@ -12,6 +13,7 @@ export default function DashboardLayout({
           <DashNavbar />
         </div>
         <main className="md:pl-[80px] pt-[80px] h-full">{children}</main>
+        <Notifications />
       </div>
     </>
   );
