@@ -11,7 +11,7 @@ export default function DashboardLayout({
         <div className="h-[80px] fixed inset-y-0 w-full z-50">
           <DashNavbar />
         </div>
-        <main className="pt-[50px] h-full">{children}</main>
+        <main className="md:pl-[80px] pt-[80px] h-full">{children}</main>
       </div>
     </>
   );
