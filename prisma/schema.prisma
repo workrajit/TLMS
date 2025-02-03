@@ -1,14 +1,102 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// schema.prisma
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // e.g., Neon Database URL
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+enum Role {
+  tenant
+  landlord
+}
+
+enum PaymentStatus {
+  paid
+  pending
+  overdue
+}
+
+enum IssueStatus {
+  pending
+  in_progress
+  resolved
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role
+  phone        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  paymentsMade   Payment[]      @relation("TenantPayments")
+  paymentsRecvd  Payment[]      @relation("LandlordPayments")
+  issuesReported Issue[]        @relation("ReportedIssues")
+  issuesAssigned Issue[]        @relation("AssignedIssues")
+  documents      Document[]
+  notifications  Notification[]
+}
+
+model Payment {
+  id          Int           @id @default(autoincrement())
+  tenantId    Int
+  landlordId  Int
+  amount      Decimal       @db.Decimal(10, 2)
+  paymentDate DateTime
+  status      PaymentStatus
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  tenant   User @relation("TenantPayments", fields: [tenantId], references: [id], onDelete: Cascade)
+  landlord User @relation("LandlordPayments", fields: [landlordId], references: [id], onDelete: Cascade)
+}
+
+model Issue {
+  id          Int         @id @default(autoincrement())
+  tenantId    Int
+  landlordId  Int? // Can be null if not assigned yet
+  title       String
+  description String
+  status      IssueStatus @default(pending)
+  imageUrl    String?
+  reportedAt  DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  tenant   User  @relation("ReportedIssues", fields: [tenantId], references: [id], onDelete: Cascade)
+  landlord User? @relation("AssignedIssues", fields: [landlordId], references: [id], onDelete: SetNull)
+}
+
+model Document {
+  id           Int      @id @default(autoincrement())
+  uploadedById Int
+  fileUrl      String
+  fileName     String
+  fileType     String?
+  description  String?
+  uploadedAt   DateTime @default(now())
+
+  // Relations
+  uploadedBy User @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  message   String
+  isRead    Boolean  @default(false)
+  type      String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
