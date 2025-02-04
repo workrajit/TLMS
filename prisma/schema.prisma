@@ -79,6 +79,7 @@ model Issue {
 
 model Document {
   id           Int      @id @default(autoincrement())
+  name         String?
   uploadedById Int
   fileUrl      String
   fileName     String
