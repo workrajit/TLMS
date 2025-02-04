@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { verifyToken } from '@/utils/auth';
+import { db } from '@/lib/db';
 
 const prisma = new PrismaClient();
 
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
   const user = verifyToken(authHeader);
   if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
-  const notifications = await prisma.notification.findMany({
+  const notifications = await db.notification.findMany({
     where: { userId: user },
   });
   return NextResponse.json(notifications);
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { userId, message, type } = body;
 
-  const notification = await prisma.notification.create({
+  const notification = await db.notification.create({
     data: {
       userId,
       message,

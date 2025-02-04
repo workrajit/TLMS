@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { put } from '@vercel/blob';
 
 export async function GET() {
@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const documents = await prisma.document.findMany({
+    const documents = await db.document.findMany({
       where: {
         userId
       },
@@ -63,7 +63,44 @@ export async function POST(req: Request) {
       access: 'public',
     });
 
-    const document = await prisma.document.create({
+    const document = await db.document.create({
+      data: {
+        name: file.name,
+        type: file.type.includes('pdf') ? 'PDF' : 'DOC',
+        size: file.size,
+        url: blob.url,
+        category: category || 'OTHER',
+        userId
+      }
+    });
+
+    return NextResponse.json(document, { status: 201 });
+  } catch (error) {
+    console.error('Error uploading document:', error);
+    return NextResponse.json(
+      { error: 'Error uploading document' }, 
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    // ... authentication ...
+
+    const formData = await req.formData();
+    const file = formData.get('file') as File;
+    const category = formData.get('category') as string;
+
+    // ... file validation ...
+
+    // Upload to Vercel Blob
+    const blob = await put(file.name, file, {
+      access: 'public',
+    });
+
+    // Create document in database
+    const document = await db.document.create({
       data: {
         name: file.name,
         type: file.type.includes('pdf') ? 'PDF' : 'DOC',
